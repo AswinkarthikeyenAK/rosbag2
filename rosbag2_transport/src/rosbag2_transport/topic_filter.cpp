@@ -29,28 +29,56 @@
 
 namespace
 {
-bool has_single_type(
-  const std::string & topic_name, const std::vector<std::string> & topic_types)
-{
-  if (topic_types.empty()) {
-    ROSBAG2_TRANSPORT_LOG_WARN_STREAM(
-      "Topic " << topic_name << " has no associated types. "
-        "This case shouldn't occur.");
-    return false;
-  }
-  auto it = topic_types.begin();
-  const std::string & reference_type = *it;
-  for (; it != topic_types.end(); it++) {
-    if (reference_type != *it) {
-      ROSBAG2_TRANSPORT_LOG_ERROR_STREAM(
-        "Topic '" << topic_name <<
-          "' has more than one type associated. Only topics with one type are supported");
+  bool has_single_type(
+    const std::string & topic_name, const std::vector<std::string> & topic_types)
+  {
+    if (topic_types.empty()) {
+      ROSBAG2_TRANSPORT_LOG_WARN_STREAM(
+        "Topic " << topic_name << " has no associated types. "
+          "This case shouldn't occur.");
       return false;
     }
+    auto it = topic_types.begin();
+    const std::string & reference_type = *it;
+    for (; it != topic_types.end(); it++) {
+      if (reference_type != *it) {
+        if (std::distance(it, topic_types.end()) > 1) {
+          const std::string & second_type = *(it + 1);
+          ROSBAG2_TRANSPORT_LOG_WARN_STREAM(
+            "Topic '" << topic_name <<
+              "' has more than one type associated. Assigning the second type to the topic: " << second_type);
+          return true;
+        }
+        ROSBAG2_TRANSPORT_LOG_WARN_STREAM(
+          "Topic '" << topic_name <<
+            "' has more than one type associated. Only topics with one type are supported. So, assigning a type to the topic");
+        return false;
+      }
+    }
+    return true;
   }
-  return true;
-}
 
+// bool has_single_type(
+//   const std::string & topic_name, const std::vector<std::string> & topic_types)
+// {
+//   if (topic_types.empty()) {
+//     ROSBAG2_TRANSPORT_LOG_WARN_STREAM(
+//       "Topic " << topic_name << " has no associated types. "
+//         "This case shouldn't occur.");
+//     return false;
+//   }
+//   auto it = topic_types.begin();
+//   const std::string & reference_type = *it;
+//   for (; it != topic_types.end(); it++) {
+//     if (reference_type != *it) {
+//       ROSBAG2_TRANSPORT_LOG_WARN_STREAM(
+//         "Topic '" << topic_name <<
+//           "' has more than one type associated. Only topics with one type are supported. So, assigning a type to the topic");
+//       return false;
+//     }
+//   }
+//   return true;
+// }
 
 bool topic_is_hidden(const std::string & topic_name)
 {
